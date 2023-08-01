@@ -79,8 +79,8 @@
 (require 'subword)
 (require 'treesit)
 (eval-when-compile
-  (require 'cl-lib)
-  (require 'seq))
+  (require 'cl-lib))
+(require 'seq)
 
 ;;; Cutom options and variables
 
@@ -209,12 +209,13 @@ This should be a list of (BEG . END).")
   "The regions we’ve expanded past.
 This should be a list of (BEG . END).")
 
+;;;###autoload
 (defun expreg-expand ()
   "Expand region."
   (interactive)
   ;; Checking for last-command isn’t strictly necessary, but nice to
   ;; have.
-  (when (not (and (region-active-p)
+  (when (not (and (use-region-p)
                   (eq (region-beginning)
                       (cadr (car expreg--prev-regions)))
                   (eq (region-end)
@@ -236,7 +237,7 @@ This should be a list of (BEG . END).")
 
   ;; Go past all the regions that are smaller than the current region,
   ;; if region is active.
-  (when (region-active-p)
+  (when (use-region-p)
     (while (and expreg--next-regions
                 (let ((beg (cadr (car expreg--next-regions)))
                       (end (cddr (car expreg--next-regions))))
@@ -261,8 +262,8 @@ This should be a list of (BEG . END).")
 (defun expreg-contract ()
   "Contract region."
   (interactive)
-  (when (and (region-active-p)
-             (> (length expreg--prev-regions) 1))
+  (when (and (use-region-p)
+             (length> expreg--prev-regions 1))
 
     (push (pop expreg--prev-regions) expreg--next-regions)
     (set-mark (cddr (car expreg--prev-regions)))
