@@ -259,6 +259,7 @@ This should be a list of (BEG . END).")
              (caar expreg--prev-regions)
              expreg--next-regions expreg--prev-regions)))
 
+;;;###autoload
 (defun expreg-contract ()
   "Contract region."
   (interactive)
