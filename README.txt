@@ -1,3 +1,5 @@
+Expreg is now available on ELPA.
+
 This is just like expand-region, but (1) we generate all regions at
 once, and (2) should be easier to debug, and (3) we out-source
 language-specific expansions to tree-sitter. Bind ‘expreg-expand’ and
