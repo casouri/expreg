@@ -38,6 +38,10 @@
 ;;     (region A)|(region B)
 ;;
 ;; Expreg also recognizes subwords if ‘subword-mode’ is on.
+;;
+;; By default, the sentence expander ‘expreg--sentence’ is not
+;; enabled. I suggest enabling it (by adding it to ‘expreg-functions’)
+;; in text modes only.
 
 ;;; TODO
 ;;
@@ -594,6 +598,16 @@ current string/comment and get lists inside."
                (< orig end))
       (push `(comment . ,(cons beg end)) result))
     result))
+
+(defun expreg--sentence ()
+  "Return a list of regions containing surrounding sentences."
+  (ignore-errors
+    (let (beg end)
+      (forward-sentence)
+      (setq end (point))
+      (backward-sentence)
+      (setq beg (point))
+      `((sentence . ,(cons beg end))))))
 
 (defun expreg--paragraph ()
   "Return a list of regions containing paragraphs or defuns."
