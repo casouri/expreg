@@ -256,7 +256,9 @@ This should be a list of (BEG . END).")
     (let ((region (pop expreg--next-regions)))
       (set-mark (cddr region))
       (goto-char (cadr region))
-      (push region expreg--prev-regions)))
+      (push region expreg--prev-regions)
+      (unless transient-mark-mode
+        (activate-mark))))
 
   (when expreg--verbose
     (message "blame: %s\nnext: %S\nprev: %S"
