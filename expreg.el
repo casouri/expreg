@@ -5,7 +5,7 @@
 ;; Author: Yuan Fu <casouri@gmail.com>
 ;; Maintainer: Yuan Fu <casouri@gmail.com>
 ;; URL: https://github.com/casouri/expreg
-;; Version: 1.2.0
+;; Version: 1.2.1
 ;; Keywords: text, editing
 ;; Package-Requires: ((emacs "29.1"))
 ;;
@@ -618,23 +618,25 @@ current string/comment and get lists inside."
             beg end result)
 
         (when beginning-of-defun-function
-          (when (beginning-of-defun)
-            (setq beg (point))
-            (end-of-defun)
-            (setq end (point))
-            ;; If we are at the BOL right below a defun, don’t mark
-            ;; that defun.
-            (unless (eq orig end)
-              (push `(paragraph-defun . ,(cons beg end)) result))))
+          (save-excursion
+            (when (beginning-of-defun)
+              (setq beg (point))
+              (end-of-defun)
+              (setq end (point))
+              ;; If we are at the BOL right below a defun, don’t mark
+              ;; that defun.
+              (unless (eq orig end)
+                (push `(paragraph-defun . ,(cons beg end)) result)))))
 
         (when (or (derived-mode-p 'text-mode)
                   (eq major-mode 'fundamental-mode))
-          (backward-paragraph)
-          (skip-syntax-forward "-")
-          (setq beg (point))
-          (forward-paragraph)
-          (setq end (point))
-          (push `(paragraph . ,(cons beg end)) result))
+          (save-excursion
+            (backward-paragraph)
+            (skip-syntax-forward "-")
+            (setq beg (point))
+            (forward-paragraph)
+            (setq end (point))
+            (push `(paragraph . ,(cons beg end)) result)))
 
         result)
     (scan-error nil)))
