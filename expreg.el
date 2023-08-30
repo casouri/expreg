@@ -5,7 +5,7 @@
 ;; Author: Yuan Fu <casouri@gmail.com>
 ;; Maintainer: Yuan Fu <casouri@gmail.com>
 ;; URL: https://github.com/casouri/expreg
-;; Version: 1.1.0
+;; Version: 1.2.0
 ;; Keywords: text, editing
 ;; Package-Requires: ((emacs "29.1"))
 ;;
