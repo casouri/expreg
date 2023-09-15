@@ -5,7 +5,7 @@
 ;; Author: Yuan Fu <casouri@gmail.com>
 ;; Maintainer: Yuan Fu <casouri@gmail.com>
 ;; URL: https://github.com/casouri/expreg
-;; Version: 1.2.1
+;; Version: 1.3.1
 ;; Keywords: text, editing
 ;; Package-Requires: ((emacs "29.1"))
 ;;
@@ -362,20 +362,24 @@ Only return something if ‘subword-mode’ is on, to keep consistency."
 (defun expreg--treesit ()
   "Return a list of regions according to tree-sitter."
   (when (treesit-parser-list)
-
-    (let ((node (treesit-node-at
-                 (point) (treesit-language-at (point))))
-          (root (treesit-buffer-root-node
-                 (treesit-language-at (point))))
+    (let ((parsers (append (treesit-parser-list)
+                           (and (fboundp #'treesit-local-parsers-at)
+                                (treesit-local-parsers-at (point)))))
           result)
+      (dolist (parser parsers)
+        (let ((node (treesit-node-at (point) parser))
+              (root (treesit-parser-root-node parser))
+              (lang (treesit-parser-language parser)))
 
-      (while node
-        (let ((beg (treesit-node-start node))
-              (end (treesit-node-end node)))
-          (when (not (treesit-node-eq node root))
-            (push `(treesit . ,(cons beg end)) result)))
+          (while node
+            (let ((beg (treesit-node-start node))
+                  (end (treesit-node-end node)))
+              (when (not (treesit-node-eq node root))
+                (push (cons (intern (format "treesit--%s" lang))
+                            (cons beg end))
+                      result)))
 
-        (setq node (treesit-node-parent node)))
+            (setq node (treesit-node-parent node)))))
       result)))
 
 (defun expreg--inside-list ()
