@@ -5,7 +5,7 @@
 ;; Author: Yuan Fu <casouri@gmail.com>
 ;; Maintainer: Yuan Fu <casouri@gmail.com>
 ;; URL: https://github.com/casouri/expreg
-;; Version: 1.3.1
+;; Version: 1.4.1
 ;; Keywords: text, editing
 ;; Package-Requires: ((emacs "29.1"))
 ;;
@@ -89,8 +89,8 @@
 ;;; Cutom options and variables
 
 (defvar-local expreg-functions
-    '( expreg--subword expreg--word expreg--list expreg--string
-       expreg--treesit expreg--comment expreg--paragraph-defun)
+  '( expreg--subword expreg--word expreg--list expreg--string
+     expreg--treesit expreg--comment expreg--paragraph-defun)
   "A list of expansion functions.
 
 Each function is called with no arguments and should return a
@@ -101,6 +101,14 @@ as ones where BEG equals END, etc, they’ll be filtered out by
 
 The function could move point, but shouldn’t return any
 scan-error, like end-of-buffer, or unbalanced parentheses, etc.")
+
+(defvar expreg-restore-point-on-quit nil
+  "If t, restore the point when quitting with ‘keyboard-quit’.
+
+By default, when user presses quit when expanding, nothing special
+happends: the region is deactivated and the point stays at where it is.
+But if this option is turned on, Emacs moves point back to where it was
+when user first started calling ‘expreg-expand’.")
 
 ;;; Helper functions
 
@@ -213,19 +221,36 @@ This should be a list of (BEG . END).")
   "The regions we’ve expanded past.
 This should be a list of (BEG . END).")
 
+(defvar-local expreg--initial-point nil
+  "The point at where the first ‘expreg-expand’ is called.
+This is used to restore point when canceling the expansion when
+‘expreg-restore-point-on-quit’ is enabled.")
+
+(defun expreg--keyboard-quit-advice ()
+  "Restores point when ‘keyboard-quit’ is called."
+  (interactive)
+  (when (and expreg-restore-point-on-quit expreg--initial-point)
+    (goto-char expreg--initial-point))
+  (setq expreg--initial-point nil))
+
 ;;;###autoload
 (defun expreg-expand ()
   "Expand region."
   (interactive)
-  ;; Checking for last-command isn’t strictly necessary, but nice to
-  ;; have.
+  ;; Initialize states if this is the first call to expreg functions.
   (when (not (and (use-region-p)
                   (eq (region-beginning)
                       (cadr (car expreg--prev-regions)))
                   (eq (region-end)
                       (cddr (car expreg--prev-regions)))))
     (setq-local expreg--next-regions nil)
-    (setq-local expreg--prev-regions nil))
+    (setq-local expreg--prev-regions nil)
+    (setq-local expreg--initial-point (point))
+    (when expreg-restore-point-on-quit
+      ;; We have to add the advice using :before. :after doesn’t work
+      ;; (advice doesn’t get called). ‘set-transient-map’ doesn’t work
+      ;; either because of how special ‘keyboard-quit’ is.
+      (advice-add 'keyboard-quit :before #'expreg--keyboard-quit-advice)))
 
   ;; If we are not already in the middle of expansions, compute them.
   (when (and (null expreg--next-regions)

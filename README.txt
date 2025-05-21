@@ -12,3 +12,7 @@ the region after point. In the example below, only region B is kept
     (region A)|(region B)
 
 Expreg also recognizes subwords if ‘subword-mode’ is on.
+
+If ‘expreg-restore-point-on-quit’ is t, when you press ‘C-g’ when
+region is active, on top of deactivating the region, Emacs also
+restores point to where it was when you first started expanding.
