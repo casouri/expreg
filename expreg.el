@@ -86,7 +86,7 @@
   (require 'cl-lib))
 (require 'seq)
 
-;;; Cutom options and variables
+;;; Custom options and variables
 
 (defvar-local expreg-functions
   '( expreg--subword expreg--word expreg--list expreg--string
@@ -106,7 +106,7 @@ scan-error, like end-of-buffer, or unbalanced parentheses, etc.")
   "If t, restore the point when quitting with ‘keyboard-quit’.
 
 By default, when user presses quit when expanding, nothing special
-happends: the region is deactivated and the point stays at where it is.
+happens: the region is deactivated and the point stays at where it is.
 But if this option is turned on, Emacs moves point back to where it was
 when user first started calling ‘expreg-expand’.")
 
@@ -261,7 +261,7 @@ This is used to restore point when canceling the expansion when
                             expreg-functions))
            (regions (expreg--filter-regions regions orig))
            (regions (expreg--sort-regions regions))
-           (regions (cl-remove-duplicates regions :test #'equal)))
+           (regions (cl-remove-duplicates regions :test #'equal :key #'cdr)))
       (setq-local expreg--next-regions regions)))
 
   ;; Go past all the regions that are smaller than the current region,
