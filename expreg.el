@@ -229,7 +229,9 @@ This is used to restore point when canceling the expansion when
 (defun expreg--keyboard-quit-advice ()
   "Restores point when ‘keyboard-quit’ is called."
   (interactive)
-  (when (and expreg-restore-point-on-quit expreg--initial-point)
+  (when (and expreg-restore-point-on-quit expreg--initial-point
+             (region-active-p)
+             (eq (marker-buffer expreg--initial-point) (current-buffer)))
     (goto-char expreg--initial-point))
   (setq expreg--initial-point nil))
 
@@ -245,7 +247,7 @@ This is used to restore point when canceling the expansion when
                       (cddr (car expreg--prev-regions)))))
     (setq-local expreg--next-regions nil)
     (setq-local expreg--prev-regions nil)
-    (setq-local expreg--initial-point (point))
+    (setq-local expreg--initial-point (point-marker))
     (when expreg-restore-point-on-quit
       ;; We have to add the advice using :before. :after doesn’t work
       ;; (advice doesn’t get called). ‘set-transient-map’ doesn’t work
