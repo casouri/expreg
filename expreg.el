@@ -221,19 +221,26 @@ This should be a list of (BEG . END).")
   "The regions we’ve expanded past.
 This should be a list of (BEG . END).")
 
-(defvar-local expreg--initial-point nil
+(defvar-local expreg--initial-point-and-last-range nil
   "The point at where the first ‘expreg-expand’ is called.
+
+And the max range we’ve reached when expanding.
+The shape is (POS . (BEG . END)).
 This is used to restore point when canceling the expansion when
 ‘expreg-restore-point-on-quit’ is enabled.")
 
 (defun expreg--keyboard-quit-advice ()
   "Restores point when ‘keyboard-quit’ is called."
   (interactive)
-  (when (and expreg-restore-point-on-quit expreg--initial-point
+  (when (and expreg-restore-point-on-quit expreg--initial-point-and-last-range
              (region-active-p)
-             (eq (marker-buffer expreg--initial-point) (current-buffer)))
-    (goto-char expreg--initial-point))
-  (setq expreg--initial-point nil))
+             (eq (marker-buffer (car expreg--initial-point-and-last-range))
+                 (current-buffer))
+             (<= (cadr expreg--initial-point-and-last-range)
+                 (point)
+                 (cddr expreg--initial-point-and-last-range)))
+    (goto-char (car expreg--initial-point-and-last-range)))
+  (setq expreg--initial-point-and-last-range nil))
 
 ;;;###autoload
 (defun expreg-expand ()
@@ -247,7 +254,7 @@ This is used to restore point when canceling the expansion when
                       (cddr (car expreg--prev-regions)))))
     (setq-local expreg--next-regions nil)
     (setq-local expreg--prev-regions nil)
-    (setq-local expreg--initial-point (point-marker))
+    (setq-local expreg--initial-point-and-last-range (cons (point-marker) nil))
     (when expreg-restore-point-on-quit
       ;; We have to add the advice using :before. :after doesn’t work
       ;; (advice doesn’t get called). ‘set-transient-map’ doesn’t work
@@ -287,6 +294,9 @@ This is used to restore point when canceling the expansion when
       (unless transient-mark-mode
         (activate-mark))))
 
+  (setcdr expreg--initial-point-and-last-range
+          (cons (region-beginning) (region-end)))
+
   (when expreg--verbose
     (message "blame: %s\nnext: %S\nprev: %S"
              (caar expreg--prev-regions)
@@ -302,6 +312,9 @@ This is used to restore point when canceling the expansion when
     (push (pop expreg--prev-regions) expreg--next-regions)
     (set-mark (cddr (car expreg--prev-regions)))
     (goto-char (cadr (car expreg--prev-regions))))
+
+  (setcdr expreg--initial-point-and-last-range
+          (cons (region-beginning) (region-end)))
 
   (when expreg--verbose
     (message "next: %S\nprev: %S"
